@@ -86,3 +86,22 @@ exports.changeMemberRole = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+// @route   DELETE /api/workspaces/:id/members/:userId
+exports.removeMember = async (req, res) => {
+  try {
+    const workspace = await Workspace.findById(req.params.id);
+    if (!workspace) return res.status(404).json({ message: 'Workspace not found' });
+
+    // Ensure they don't remove the creator/owner (for safety)
+    if (workspace.createdBy.toString() === req.params.userId) {
+      return res.status(400).json({ message: 'Cannot remove the workspace creator' });
+    }
+
+    workspace.members = workspace.members.filter(m => m.userId.toString() !== req.params.userId);
+    await workspace.save();
+    res.json(workspace);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

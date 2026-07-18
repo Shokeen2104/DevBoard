@@ -2,9 +2,9 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
-  const refreshToken = jwt.sign({ id: userId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+const generateTokens = (user) => {
+  const accessToken = jwt.sign({ id: user._id || user.id, name: user.name, email: user.email }, process.env.JWT_SECRET, { expiresIn: '15m' });
+  const refreshToken = jwt.sign({ id: user._id || user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
   return { accessToken, refreshToken };
 };
 
@@ -27,7 +27,7 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -56,7 +56,7 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,

@@ -48,7 +48,7 @@ const useAuthStore = create((set) => ({
       // Decode JWT to get basic user info or call a /me endpoint
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        set({ user: { id: payload.id }, isAuthenticated: true });
+        set({ user: { id: payload.id, name: payload.name || 'User', email: payload.email || '' }, isAuthenticated: true });
       } catch(e) {
         localStorage.removeItem('accessToken');
       }

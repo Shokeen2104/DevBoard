@@ -5,7 +5,8 @@ const {
   getWorkspace,
   getUserWorkspaces,
   addMember,
-  changeMemberRole
+  changeMemberRole,
+  removeMember
 } = require('../controllers/workspaceController');
 
 const { requireAuth, requireRole } = require('../middleware/authMiddleware');
@@ -18,6 +19,7 @@ router.post('/', createWorkspace);
 router.get('/:id', getWorkspace);
 router.post('/:id/members', requireRole(['admin']), addMember);
 router.patch('/:id/members/:userId', requireRole(['admin']), changeMemberRole);
+router.delete('/:id/members/:userId', requireRole(['admin']), removeMember);
 
 // Nested routes
 router.use('/:id/boards', require('./boardRoutes'));
