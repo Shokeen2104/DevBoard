@@ -1,0 +1,14 @@
+const mongoose = require('mongoose');
+
+const memberSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  role: { type: String, enum: ['admin', 'member', 'viewer'], default: 'member' }
+}, { _id: false });
+
+const workspaceSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  members: [memberSchema]
+}, { timestamps: true });
+
+module.exports = mongoose.model('Workspace', workspaceSchema);
