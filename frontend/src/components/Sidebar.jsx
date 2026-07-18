@@ -14,7 +14,7 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        DevBoard
+        <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>DevBoard</Link>
       </div>
       <div className="sidebar-content">
         {workspaces.map(ws => (
@@ -27,17 +27,30 @@ const Sidebar = () => {
               <span>{expanded[ws._id] ? '▾' : '▸'}</span>
             </div>
             
-            {expanded[ws._id] && ws.boards.map(board => (
-              <Link 
-                key={board._id}
-                to={`/board/${board._id}`}
-                className={`board-link ${location.pathname === `/board/${board._id}` ? 'active' : ''}`}
-              >
-                # {board.title}
-              </Link>
-            ))}
+            {expanded[ws._id] && (
+              <>
+                {ws.boards.map(board => (
+                  <Link 
+                    key={board._id}
+                    to={`/board/${board._id}`}
+                    className={`board-link ${location.pathname === `/board/${board._id}` ? 'active' : ''}`}
+                  >
+                    # {board.title}
+                  </Link>
+                ))}
+                <Link to="/" className="board-link" style={{ color: 'var(--text-secondary)' }}>
+                  + Add board
+                </Link>
+              </>
+            )}
           </div>
         ))}
+        
+        <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem' }}>
+          <Link to="/" className="board-link" style={{ color: 'var(--text-secondary)', paddingLeft: '1.5rem' }}>
+            + Add workspace
+          </Link>
+        </div>
       </div>
     </div>
   );
