@@ -31,23 +31,24 @@ exports.requireRole = (allowedRoles) => {
 
       let workspaceId = req.params.id; // Assume the route has /:id as workspaceId by default
 
-      // Resolve workspaceId if the route is for a board, list, or task
-      if (req.baseUrl.includes('/boards')) {
+      // Resolve workspaceId if the route is for a board, list, or task directly
+      if (req.baseUrl.startsWith('/api/boards')) {
         const board = await Board.findById(req.params.id);
         if (!board) return res.status(404).json({ message: 'Board not found' });
         workspaceId = board.workspaceId;
-      } else if (req.baseUrl.includes('/lists')) {
+      } else if (req.baseUrl.startsWith('/api/lists')) {
         const list = await List.findById(req.params.id);
         if (!list) return res.status(404).json({ message: 'List not found' });
         const board = await Board.findById(list.boardId);
         workspaceId = board.workspaceId;
-      } else if (req.baseUrl.includes('/tasks')) {
+      } else if (req.baseUrl.startsWith('/api/tasks')) {
         const task = await Task.findById(req.params.id);
         if (!task) return res.status(404).json({ message: 'Task not found' });
         const list = await List.findById(task.listId);
         const board = await Board.findById(list.boardId);
         workspaceId = board.workspaceId;
       }
+      // If it starts with /api/workspaces, workspaceId is already req.params.id
 
       if (!workspaceId) {
         return res.status(400).json({ message: 'Could not determine workspace context' });

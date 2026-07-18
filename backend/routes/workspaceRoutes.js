@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createWorkspace,
   getWorkspace,
+  getUserWorkspaces,
   addMember,
   changeMemberRole
 } = require('../controllers/workspaceController');
@@ -12,6 +13,7 @@ const { requireAuth, requireRole } = require('../middleware/authMiddleware');
 // Apply requireAuth to all workspace routes
 router.use(requireAuth);
 
+router.get('/', getUserWorkspaces);
 router.post('/', createWorkspace);
 router.get('/:id', getWorkspace);
 router.post('/:id/members', requireRole(['admin']), addMember);

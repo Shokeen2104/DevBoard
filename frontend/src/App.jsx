@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import BoardView from './pages/BoardView';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Navbar from './components/Navbar';
 import useAuthStore from './store/authStore';
 
 const ProtectedRoute = ({ children }) => {
@@ -14,7 +15,6 @@ const ProtectedRoute = ({ children }) => {
 const App = () => {
   const checkAuth = useAuthStore(state => state.checkAuth);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const logout = useAuthStore(state => state.logout);
   
   React.useEffect(() => {
     checkAuth();
@@ -23,14 +23,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <div className="app-container">
-        <nav className="navbar">
-          <div className="nav-brand">DevBoard</div>
-          <div className="nav-profile">
-            {isAuthenticated ? (
-              <button className="btn" onClick={logout} style={{ background: 'transparent', color: 'var(--text-secondary)' }}>Logout</button>
-            ) : null}
-          </div>
-        </nav>
+        <Navbar />
         
         <Routes>
           <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" />} />

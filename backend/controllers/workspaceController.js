@@ -1,4 +1,25 @@
 const Workspace = require('../models/Workspace');
+const Board = require('../models/Board');
+
+// @route   GET /api/workspaces
+exports.getUserWorkspaces = async (req, res) => {
+  try {
+    const workspaces = await Workspace.find({ 'members.userId': req.user.id });
+    
+    // Fetch boards for each workspace to display in navigation
+    const workspacesWithBoards = await Promise.all(workspaces.map(async (workspace) => {
+      const boards = await Board.find({ workspaceId: workspace._id });
+      return {
+        ...workspace.toObject(),
+        boards
+      };
+    }));
+
+    res.json(workspacesWithBoards);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 // @route   POST /api/workspaces
 exports.createWorkspace = async (req, res) => {
