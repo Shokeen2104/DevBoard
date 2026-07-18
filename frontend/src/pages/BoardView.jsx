@@ -41,10 +41,20 @@ const BoardView = () => {
   return (
     <div className="board-container">
       <div className="board-header">
-        <h2>{board.title}</h2>
-        <div className="board-actions">
-          {/* Real app would have add list button, members etc. */}
-          <button className="btn btn-primary">Share</button>
+        <div className="board-header-left">
+          <span style={{ fontSize: '1.25rem', color: 'var(--text-secondary)' }}>◫</span>
+          <h2 className="board-title">{board.title}</h2>
+        </div>
+        
+        <div className="board-header-right">
+          <div className="avatar-group">
+            <div className="avatar" style={{ background: '#094a8f', zIndex: 3 }}>RS</div>
+            <div className="avatar" style={{ background: '#D988A1', zIndex: 2 }}>KP</div>
+            <div className="avatar" style={{ background: '#6DB38E', zIndex: 1 }}>MJ</div>
+          </div>
+          <button className="btn-outline">
+            <span style={{ fontSize: '1rem' }}>+</span> Invite
+          </button>
         </div>
       </div>
       

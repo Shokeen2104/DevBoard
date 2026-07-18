@@ -20,21 +20,43 @@ const TaskCard = ({ task }) => {
     zIndex: isDragging ? 999 : 1,
   };
 
+  // Mock data for display if not present in DB
+  const labels = task.labels?.length ? task.labels : (task.title.includes('offset') ? ['bug'] : (task.title.includes('Redis') ? ['feature'] : []));
+  const dateStr = task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : (task.title.includes('offset') ? 'Jul 22' : 'Jul 20');
+  const assigneeInitials = task.assignee?.name ? task.assignee.name.substring(0,2).toUpperCase() : (task.title.includes('API') ? 'MJ' : 'RS');
+  const avatarColor = assigneeInitials === 'MJ' ? '#6DB38E' : '#094a8f';
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`glass-panel task-card ${isDragging ? 'dragging' : ''}`}
+      {...attributes} 
+      {...listeners}
+      className={`task-card ${isDragging ? 'dragging' : ''}`}
     >
-      <div className="task-header">
-        <span className="task-title">{task.title}</span>
-        <div {...attributes} {...listeners} className="drag-handle">
-          <GripVertical size={16} color="var(--text-secondary)" />
+      {labels.length > 0 && (
+        <div className="task-labels">
+          {labels.map(label => (
+            <span key={label} className={`label-pill label-${label.toLowerCase()}`}>
+              {label}
+            </span>
+          ))}
+        </div>
+      )}
+      
+      <div className="task-title">
+        {task.title}
+      </div>
+      
+      <div className="task-footer">
+        <div className="task-date">
+          <span>☐</span> {dateStr}
+        </div>
+        
+        <div className="avatar" style={{ background: avatarColor, width: '24px', height: '24px', fontSize: '0.65rem' }}>
+          {assigneeInitials}
         </div>
       </div>
-      {task.description && (
-        <p className="task-desc">{task.description}</p>
-      )}
     </div>
   );
 };

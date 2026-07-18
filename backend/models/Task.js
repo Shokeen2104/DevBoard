@@ -1,13 +1,16 @@
 const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema({
-  listId: { type: mongoose.Schema.Types.ObjectId, ref: 'List', required: true },
   title: { type: String, required: true },
-  description: { type: String, default: '' },
-  assignees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  description: { type: String },
+  listId: { type: mongoose.Schema.Types.ObjectId, ref: 'List', required: true },
+  order: { type: Number, required: true },
+  
+  // New fields for redesign
   labels: [{ type: String }],
   dueDate: { type: Date },
-  order: { type: Number, required: true }, // Fractional index
+  assignee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });
 
