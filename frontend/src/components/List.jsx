@@ -2,6 +2,7 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TaskCard from './TaskCard';
+import api from '../api/axios';
 
 const List = ({ list }) => {
   const { setNodeRef } = useDroppable({
@@ -10,6 +11,25 @@ const List = ({ list }) => {
   });
 
   const taskIds = list.tasks.map(t => t._id);
+
+  const handleAddTask = async () => {
+    const title = window.prompt("Enter task title:");
+    if (!title) return;
+    try {
+      const order = list.tasks.length > 0 
+        ? list.tasks[list.tasks.length - 1].order + 1000 
+        : 1000;
+        
+      await api.post(`/lists/${list._id}/tasks`, { 
+        title, 
+        order 
+      });
+      // The new task will be added to the UI automatically via the 'task:created' socket event
+    } catch (err) {
+      console.error("Failed to add task", err);
+      alert("Failed to create task");
+    }
+  };
 
   return (
     <div className="board-list">
@@ -30,7 +50,7 @@ const List = ({ list }) => {
         </SortableContext>
       </div>
       
-      <button className="add-task-btn">
+      <button className="add-task-btn" onClick={handleAddTask}>
         <span>+</span> Add task
       </button>
     </div>

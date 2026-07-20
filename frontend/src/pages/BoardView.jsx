@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Board from '../components/Board';
 import useBoardStore from '../store/boardStore';
+import useAuthStore from '../store/authStore';
 import useSocket from '../hooks/useSocket';
 import { Loader2 } from 'lucide-react';
 
@@ -10,6 +11,9 @@ const BoardView = () => {
   const fetchBoard = useBoardStore(state => state.fetchBoard);
   const board = useBoardStore(state => state.board);
   const isLoading = useBoardStore(state => state.isLoading);
+  const user = useAuthStore(state => state.user);
+
+  const initials = user?.name ? user.name.substring(0, 2).toUpperCase() : 'U';
 
   // Initialize Socket.io connection for this board
   useSocket(id);
@@ -48,9 +52,7 @@ const BoardView = () => {
         
         <div className="board-header-right">
           <div className="avatar-group">
-            <div className="avatar" style={{ background: '#094a8f', zIndex: 3 }}>RS</div>
-            <div className="avatar" style={{ background: '#D988A1', zIndex: 2 }}>KP</div>
-            <div className="avatar" style={{ background: '#6DB38E', zIndex: 1 }}>MJ</div>
+            <div className="avatar" style={{ background: '#094a8f', zIndex: 1 }}>{initials}</div>
           </div>
           <button className="btn-outline">
             <span style={{ fontSize: '1rem' }}>+</span> Invite

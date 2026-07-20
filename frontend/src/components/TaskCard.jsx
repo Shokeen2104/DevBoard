@@ -1,7 +1,8 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Trash2 } from 'lucide-react';
+import api from '../api/axios';
 
 const TaskCard = ({ task }) => {
   const {
@@ -20,11 +21,25 @@ const TaskCard = ({ task }) => {
     zIndex: isDragging ? 999 : 1,
   };
 
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+    
+    try {
+      await api.delete(`/tasks/${task._id}`);
+      // boardStore will automatically remove it via socket event 'task:deleted'
+    } catch (err) {
+      console.error("Failed to delete task", err);
+      alert("Failed to delete task");
+    }
+  };
+
   // Mock data for display if not present in DB
   const labels = task.labels?.length ? task.labels : (task.title.includes('offset') ? ['bug'] : (task.title.includes('Redis') ? ['feature'] : []));
   const dateStr = task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : (task.title.includes('offset') ? 'Jul 22' : 'Jul 20');
-  const assigneeInitials = task.assignee?.name ? task.assignee.name.substring(0,2).toUpperCase() : (task.title.includes('API') ? 'MJ' : 'RS');
-  const avatarColor = assigneeInitials === 'MJ' ? '#6DB38E' : '#094a8f';
+  const assigneeInitials = task.assignee?.name ? task.assignee.name.substring(0,2).toUpperCase() : null;
+  const avatarColor = '#094a8f';
 
   return (
     <div
@@ -48,8 +63,19 @@ const TaskCard = ({ task }) => {
         <div className="task-title">
           {task.title}
         </div>
-        <div style={{ color: 'var(--text-secondary)', opacity: 0.5, marginTop: '2px' }}>
-          <GripVertical size={16} />
+        <div style={{ color: 'var(--text-secondary)', opacity: 0.5, marginTop: '2px', display: 'flex', gap: '0.25rem' }}>
+          <button 
+            onClick={handleDelete}
+            onPointerDown={(e) => e.stopPropagation()}
+            style={{ 
+              background: 'none', border: 'none', color: 'inherit', 
+              cursor: 'pointer', display: 'flex', alignItems: 'center' 
+            }}
+            title="Delete task"
+          >
+            <Trash2 size={15} />
+          </button>
+          <GripVertical size={16} style={{ cursor: 'grab' }} />
         </div>
       </div>
       
@@ -58,9 +84,11 @@ const TaskCard = ({ task }) => {
           <span>☐</span> {dateStr}
         </div>
         
-        <div className="avatar" style={{ background: avatarColor, width: '24px', height: '24px', fontSize: '0.65rem' }}>
-          {assigneeInitials}
-        </div>
+        {assigneeInitials && (
+          <div className="avatar" style={{ background: avatarColor, width: '24px', height: '24px', fontSize: '0.65rem' }}>
+            {assigneeInitials}
+          </div>
+        )}
       </div>
     </div>
   );
