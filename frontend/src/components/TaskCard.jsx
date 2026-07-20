@@ -44,8 +44,13 @@ const TaskCard = ({ task }) => {
         </div>
       )}
       
-      <div className="task-title">
-        {task.title}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+        <div className="task-title">
+          {task.title}
+        </div>
+        <div style={{ color: 'var(--text-secondary)', opacity: 0.5, marginTop: '2px' }}>
+          <GripVertical size={16} />
+        </div>
       </div>
       
       <div className="task-footer">

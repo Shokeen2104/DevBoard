@@ -89,6 +89,26 @@ const Board = () => {
         {lists.map(list => (
           <List key={list._id} list={list} />
         ))}
+        
+        <div className="add-list-container">
+          <button className="add-list-btn" style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: 'none',
+            color: 'var(--text-primary)',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            minWidth: '280px',
+            textAlign: 'left',
+            fontWeight: '500',
+            height: 'fit-content'
+          }}>
+            <span style={{ fontSize: '1.2rem', lineHeight: '1' }}>+</span> Add another list
+          </button>
+        </div>
       </div>
       
       <DragOverlay>
