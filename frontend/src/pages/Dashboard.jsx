@@ -1,61 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
-import useAuthStore from '../store/authStore';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import useWorkspaceStore from '../store/workspaceStore';
+import api from '../api/axios';
 
 const Dashboard = () => {
-  const [workspaces, setWorkspaces] = useState([]);
-  const [newWorkspaceName, setNewWorkspaceName] = useState('');
-  const [newBoardTitle, setNewBoardTitle] = useState('');
-  const [selectedWorkspace, setSelectedWorkspace] = useState(null);
-  const navigate = useNavigate();
-  const user = useAuthStore(state => state.user);
+  const workspaces = useWorkspaceStore(state => state.workspaces);
+  const activeWorkspaceId = useWorkspaceStore(state => state.activeWorkspaceId);
   const fetchWorkspaces = useWorkspaceStore(state => state.fetchWorkspaces);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Ideally we fetch workspaces here
-  }, []);
+  const activeWorkspace = workspaces.find(w => w._id === activeWorkspaceId);
 
-  const handleCreateWorkspace = async (e) => {
-    e.preventDefault();
+  const handleCreateBoard = async () => {
+    if (!activeWorkspaceId) return;
+    const title = window.prompt("Enter new board title:");
+    if (!title) return;
+
     try {
-      const { data: workspace } = await api.post('/workspaces', { name: newWorkspaceName });
-      setWorkspaces([...workspaces, workspace]);
-      setNewWorkspaceName('');
+      const { data } = await api.post(`/workspaces/${activeWorkspaceId}/boards`, { title });
       
-      // Auto-create a board for the new workspace
-      const { data: board } = await api.post(`/workspaces/${workspace._id}/boards`, { title: 'Main Board' });
-      
-      // Auto-create lists for the board
-      const { data: todoList } = await api.post(`/boards/${board._id}/lists`, { title: 'To Do', order: 1000 });
-      await api.post(`/boards/${board._id}/lists`, { title: 'In Progress', order: 2000 });
-      await api.post(`/boards/${board._id}/lists`, { title: 'Done', order: 3000 });
-
-      // Auto-create a placeholder card in To Do
-      await api.post(`/lists/${todoList._id}/tasks`, { 
-        title: 'Welcome to DevBoard! 🎉', 
-        description: 'Drag this card to another list to see how it works.', 
-        order: 1000 
-      });
-
-      // Refresh global workspaces so sidebar updates
-      await fetchWorkspaces();
-
-      // Navigate immediately to the new board
-      navigate(`/board/${board._id}`);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleCreateBoard = async (e) => {
-    e.preventDefault();
-    if (!selectedWorkspace) return;
-    try {
-      const { data } = await api.post(`/workspaces/${selectedWorkspace}/boards`, { title: newBoardTitle });
-      
-      // Auto-create some starter lists for the new board
+      // Auto-create lists for the new board
       const { data: todoList } = await api.post(`/boards/${data._id}/lists`, { title: 'To Do', order: 1000 });
       await api.post(`/boards/${data._id}/lists`, { title: 'In Progress', order: 2000 });
       await api.post(`/boards/${data._id}/lists`, { title: 'Done', order: 3000 });
@@ -74,55 +38,58 @@ const Dashboard = () => {
     }
   };
 
+  if (!activeWorkspace) {
+    return (
+      <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+        {workspaces.length === 0 ? "Create a workspace to get started" : "Select a workspace"}
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '2rem' }}>Welcome, {user?.name || 'User'}</h2>
-      
-      <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-        <h3>Create a Workspace</h3>
-        <form onSubmit={handleCreateWorkspace} style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-          <input 
-            className="input-field" 
-            value={newWorkspaceName} 
-            onChange={e => setNewWorkspaceName(e.target.value)} 
-            placeholder="Workspace Name" 
-            required 
-          />
-          <button className="btn btn-primary" type="submit">Create</button>
-        </form>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div className="workspace-dashboard-header">
+        <div>
+          <h2 className="workspace-title-main">{activeWorkspace.name}</h2>
+          <div className="workspace-subtitle">{activeWorkspace.boards?.length || 0} boards</div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button className="btn-outline" onClick={handleCreateBoard}>
+            <span style={{ fontSize: '1.2rem', lineHeight: '1' }}>+</span> New board
+          </button>
+          <button className="btn-icon">
+            ...
+          </button>
+        </div>
       </div>
 
-      <div className="glass-panel" style={{ padding: '1.5rem' }}>
-        <h3>Create a Board in Existing Workspace</h3>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>
-          Select a workspace to add a new board.
-        </p>
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-          <select 
-            className="input-field" 
-            value={selectedWorkspace || ''} 
-            onChange={e => setSelectedWorkspace(e.target.value)}
-            style={{ width: '200px' }}
-          >
-            <option value="" disabled>Select Workspace</option>
-            {useWorkspaceStore(state => state.workspaces).map(ws => (
-              <option key={ws._id} value={ws._id}>{ws.name}</option>
-            ))}
-          </select>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div className="board-grid">
+          {activeWorkspace.boards?.map((board, index) => {
+            const barColors = [['#2b73d6', '#3b2575', '#573312'], ['#3b2575', '#1a5937', '#2b73d6'], ['#1a5937', '#573312', '#3b2575']];
+            const colors = barColors[index % barColors.length];
+            return (
+              <Link key={board._id} to={`/board/${board._id}`} className="board-grid-card">
+                <div className="board-card-graphic">
+                  <div className="graphic-bar" style={{ height: '50px', background: colors[0] }}></div>
+                  <div className="graphic-bar" style={{ height: '80px', background: colors[1] }}></div>
+                  <div className="graphic-bar" style={{ height: '30px', background: colors[2] }}></div>
+                </div>
+                <div>
+                  <div className="board-card-title">{board.title}</div>
+                  <div className="board-card-meta">
+                    {Math.floor(Math.random() * 10) + 1} cards · updated today
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+          
+          <div className="new-board-card" onClick={handleCreateBoard}>
+            <span style={{ fontSize: '1.5rem', fontWeight: 300 }}>+</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>New board</span>
+          </div>
         </div>
-        
-        {selectedWorkspace && (
-          <form onSubmit={handleCreateBoard} style={{ display: 'flex', gap: '1rem' }}>
-            <input 
-              className="input-field" 
-              value={newBoardTitle} 
-              onChange={e => setNewBoardTitle(e.target.value)} 
-              placeholder="Board Title" 
-              required 
-            />
-            <button className="btn btn-primary" type="submit">Create Board</button>
-          </form>
-        )}
       </div>
     </div>
   );
