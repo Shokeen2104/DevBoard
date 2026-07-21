@@ -23,6 +23,11 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Health check / root route
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'DevBoard API Server is running successfully' });
+});
+
 // Routes (to be added)
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/workspaces', require('./routes/workspaceRoutes'));
