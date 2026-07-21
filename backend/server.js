@@ -17,7 +17,11 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || true,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : true;
+    callback(null, frontendUrl);
+  },
   credentials: true
 }));
 app.use(express.json());
