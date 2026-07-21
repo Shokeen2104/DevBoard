@@ -23,6 +23,7 @@ const TaskCard = ({ task }) => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleUpdate = async (e) => {
     if (e && e.preventDefault) {
@@ -46,8 +47,6 @@ const TaskCard = ({ task }) => {
   const handleDelete = async (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
-    
     try {
       await api.delete(`/tasks/${task._id}`);
       // boardStore will automatically remove it via socket event 'task:deleted'
@@ -112,30 +111,38 @@ const TaskCard = ({ task }) => {
             task.title
           )}
         </div>
-        <div style={{ color: 'var(--text-secondary)', opacity: 0.5, marginTop: '2px', display: 'flex', gap: '0.25rem' }}>
-          <button 
-            onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            style={{ 
-              background: 'none', border: 'none', color: 'inherit', 
-              cursor: 'pointer', display: 'flex', alignItems: 'center' 
-            }}
-            title="Edit task"
-          >
-            <Edit2 size={15} />
-          </button>
-          <button 
-            onClick={handleDelete}
-            onPointerDown={(e) => e.stopPropagation()}
-            style={{ 
-              background: 'none', border: 'none', color: 'inherit', 
-              cursor: 'pointer', display: 'flex', alignItems: 'center' 
-            }}
-            title="Delete task"
-          >
-            <Trash2 size={15} />
-          </button>
-          <GripVertical size={16} style={{ cursor: 'grab' }} />
+        <div style={{ color: 'var(--text-secondary)', opacity: 0.5, marginTop: '2px', display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+          {isDeleting ? (
+            <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-darker)', padding: '2px', borderRadius: '4px' }}>
+              <button onClick={handleDelete} onPointerDown={e => e.stopPropagation()} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '2px', padding: '0 4px', fontSize: '10px', cursor: 'pointer' }}>Yes</button>
+              <button onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }} onPointerDown={e => e.stopPropagation()} style={{ background: 'transparent', color: 'inherit', border: '1px solid var(--border-color)', borderRadius: '2px', padding: '0 4px', fontSize: '10px', cursor: 'pointer' }}>No</button>
+            </div>
+          ) : (
+            <>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                style={{ 
+                  background: 'none', border: 'none', color: 'inherit', 
+                  cursor: 'pointer', display: 'flex', alignItems: 'center' 
+                }}
+                title="Edit task"
+              >
+                <Edit2 size={15} />
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                style={{ 
+                  background: 'none', border: 'none', color: 'inherit', 
+                  cursor: 'pointer', display: 'flex', alignItems: 'center' 
+                }}
+                title="Delete task"
+              >
+                <Trash2 size={15} />
+              </button>
+            </>
+          )}
         </div>
       </div>
       

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useWorkspaceStore from '../store/workspaceStore';
 import useAuthStore from '../store/authStore';
@@ -11,6 +11,10 @@ const Dashboard = () => {
   const user = useAuthStore(state => state.user);
   const navigate = useNavigate();
 
+  const [isAddingBoard, setIsAddingBoard] = useState(false);
+  const [newBoardTitle, setNewBoardTitle] = useState('');
+  const [isDeletingWs, setIsDeletingWs] = useState(false);
+
   const activeWorkspace = workspaces.find(w => w._id === activeWorkspaceId);
   
   const currentMember = activeWorkspace?.members?.find(m => 
@@ -19,7 +23,6 @@ const Dashboard = () => {
   const isOwner = currentMember?.role === 'owner';
 
   const handleDeleteWorkspace = async () => {
-    if (!window.confirm(`Are you sure you want to delete workspace "${activeWorkspace.name}"? This action cannot be undone.`)) return;
     try {
       await api.delete(`/workspaces/${activeWorkspaceId}`);
       useWorkspaceStore.getState().setActiveWorkspace(null);
@@ -32,10 +35,15 @@ const Dashboard = () => {
 
   const handleCreateBoard = async () => {
     if (!activeWorkspaceId) return;
-    const title = window.prompt("Enter new board title:");
-    if (!title) return;
+    const title = newBoardTitle.trim();
+    if (!title) {
+      setIsAddingBoard(false);
+      return;
+    }
 
     try {
+      setIsAddingBoard(false);
+      setNewBoardTitle('');
       const { data } = await api.post(`/workspaces/${activeWorkspaceId}/boards`, { title });
       
       // Auto-create lists for the new board
@@ -54,6 +62,7 @@ const Dashboard = () => {
       navigate(`/board/${data._id}`);
     } catch (err) {
       console.error(err);
+      setIsAddingBoard(false);
     }
   };
 
@@ -72,23 +81,28 @@ const Dashboard = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <h2 className="workspace-title-main">{activeWorkspace.name}</h2>
             {isOwner && (
-              <button 
-                className="btn-outline" 
-                onClick={handleDeleteWorkspace}
-                style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ef4444', padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
-              >
-                Delete Workspace
-              </button>
+              isDeletingWs ? (
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#ef4444' }}>Are you sure?</span>
+                  <button className="btn-outline" onClick={handleDeleteWorkspace} style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ef4444', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}>Yes</button>
+                  <button className="btn-outline" onClick={() => setIsDeletingWs(false)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}>No</button>
+                </div>
+              ) : (
+                <button 
+                  className="btn-outline" 
+                  onClick={() => setIsDeletingWs(true)}
+                  style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ef4444', padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
+                >
+                  Delete Workspace
+                </button>
+              )
             )}
           </div>
           <div className="workspace-subtitle">{activeWorkspace.boards?.length || 0} boards</div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button className="btn-outline" onClick={handleCreateBoard}>
+          <button className="btn-outline" onClick={() => setIsAddingBoard(true)}>
             <span style={{ fontSize: '1.2rem', lineHeight: '1' }}>+</span> New board
-          </button>
-          <button className="btn-icon">
-            ...
           </button>
         </div>
       </div>
@@ -115,10 +129,42 @@ const Dashboard = () => {
             );
           })}
           
-          <div className="new-board-card" onClick={handleCreateBoard}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 300 }}>+</span>
-            <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>New board</span>
-          </div>
+          {isAddingBoard ? (
+            <div className="new-board-card" style={{ display: 'flex', flexDirection: 'column', padding: '1rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', cursor: 'default' }}>
+              <input 
+                type="text" 
+                value={newBoardTitle}
+                onChange={(e) => setNewBoardTitle(e.target.value)}
+                placeholder="Board title..."
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateBoard();
+                  if (e.key === 'Escape') {
+                    setIsAddingBoard(false);
+                    setNewBoardTitle('');
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  borderRadius: '4px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-darker)',
+                  color: 'var(--text-primary)',
+                  marginBottom: '0.5rem'
+                }}
+              />
+              <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                <button className="btn btn-primary" onClick={handleCreateBoard} style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', flex: 1 }}>Create</button>
+                <button className="btn-outline" onClick={() => setIsAddingBoard(false)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div className="new-board-card" onClick={() => setIsAddingBoard(true)}>
+              <span style={{ fontSize: '1.5rem', fontWeight: 300 }}>+</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>New board</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

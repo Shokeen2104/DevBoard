@@ -96,3 +96,18 @@ exports.logout = (req, res) => {
   res.clearCookie('refreshToken');
   res.json({ message: 'Logged out successfully' });
 };
+
+// @route   GET /api/auth/find?email=...
+exports.findUser = async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+
+    const user = await User.findOne({ email }).select('_id name email');
+    if (!user) return res.status(404).json({ message: 'No user found with that email' });
+
+    res.json(user);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

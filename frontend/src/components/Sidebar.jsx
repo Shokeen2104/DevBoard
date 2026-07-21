@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useWorkspaceStore from '../store/workspaceStore';
 import useAuthStore from '../store/authStore';
@@ -10,6 +10,9 @@ const Sidebar = () => {
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
   const navigate = useNavigate();
+
+  const [isAddingWs, setIsAddingWs] = useState(false);
+  const [newWsName, setNewWsName] = useState('');
 
   const handleLogout = () => {
     logout();
@@ -48,22 +51,48 @@ const Sidebar = () => {
             </div>
           ))}
         </div>
-        
-        <button className="add-workspace-btn" onClick={() => {
-          const name = window.prompt("Enter new workspace name:");
-          if (name) {
-            // Ideally, we'd fire an action here to create it. For now, it will trigger the Dashboard's effect or user can just use it.
-            // Since Dashboard handles creation in this demo, maybe redirecting to a /create route is better, or firing api here.
-            // Let's implement a quick API call here for seamless experience.
-            import('../api/axios').then(({ default: api }) => {
-              api.post('/workspaces', { name }).then(() => {
-                useWorkspaceStore.getState().fetchWorkspaces();
-              });
-            });
-          }
-        }}>
-          <span>+</span> Add workspace
-        </button>
+        {isAddingWs ? (
+          <div style={{ padding: '0.5rem 1rem' }}>
+            <input 
+              type="text" 
+              value={newWsName}
+              onChange={(e) => setNewWsName(e.target.value)}
+              placeholder="Workspace name..."
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setIsAddingWs(false);
+                if (e.key === 'Enter') {
+                  if (newWsName.trim()) {
+                    import('../api/axios').then(({ default: api }) => {
+                      api.post('/workspaces', { name: newWsName.trim() }).then(() => {
+                        useWorkspaceStore.getState().fetchWorkspaces();
+                        setIsAddingWs(false);
+                        setNewWsName('');
+                      });
+                    });
+                  }
+                }
+              }}
+              onBlur={() => {
+                // timeout to allow click on enter/button if we had one
+                setTimeout(() => setIsAddingWs(false), 100);
+              }}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                borderRadius: '4px',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+        ) : (
+          <button className="add-workspace-btn" onClick={() => setIsAddingWs(true)}>
+            <span>+</span> Add workspace
+          </button>
+        )}
       </div>
       
       {/* Profile Section */}
