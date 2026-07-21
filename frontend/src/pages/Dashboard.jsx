@@ -1,15 +1,34 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useWorkspaceStore from '../store/workspaceStore';
+import useAuthStore from '../store/authStore';
 import api from '../api/axios';
 
 const Dashboard = () => {
   const workspaces = useWorkspaceStore(state => state.workspaces);
   const activeWorkspaceId = useWorkspaceStore(state => state.activeWorkspaceId);
   const fetchWorkspaces = useWorkspaceStore(state => state.fetchWorkspaces);
+  const user = useAuthStore(state => state.user);
   const navigate = useNavigate();
 
   const activeWorkspace = workspaces.find(w => w._id === activeWorkspaceId);
+  
+  const currentMember = activeWorkspace?.members?.find(m => 
+    m.userId === user?.id || (m.userId._id && m.userId._id === user?.id)
+  );
+  const isOwner = currentMember?.role === 'owner';
+
+  const handleDeleteWorkspace = async () => {
+    if (!window.confirm(`Are you sure you want to delete workspace "${activeWorkspace.name}"? This action cannot be undone.`)) return;
+    try {
+      await api.delete(`/workspaces/${activeWorkspaceId}`);
+      useWorkspaceStore.getState().setActiveWorkspace(null);
+      await fetchWorkspaces();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete workspace");
+    }
+  };
 
   const handleCreateBoard = async () => {
     if (!activeWorkspaceId) return;
@@ -50,7 +69,18 @@ const Dashboard = () => {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <div className="workspace-dashboard-header">
         <div>
-          <h2 className="workspace-title-main">{activeWorkspace.name}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <h2 className="workspace-title-main">{activeWorkspace.name}</h2>
+            {isOwner && (
+              <button 
+                className="btn-outline" 
+                onClick={handleDeleteWorkspace}
+                style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ef4444', padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
+              >
+                Delete Workspace
+              </button>
+            )}
+          </div>
           <div className="workspace-subtitle">{activeWorkspace.boards?.length || 0} boards</div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

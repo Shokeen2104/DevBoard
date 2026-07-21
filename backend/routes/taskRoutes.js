@@ -12,11 +12,11 @@ const { requireAuth, requireRole } = require('../middleware/authMiddleware');
 router.use(requireAuth);
 
 // Mounted at /api/lists/:id/tasks
-router.post('/', requireRole(['admin', 'member']), createTask);
+router.post('/', requireRole(['owner', 'admin', 'member']), createTask);
 
 // Mounted at /api/tasks
-router.patch('/:id', requireRole(['admin', 'member']), updateTask);
-router.delete('/:id', requireRole(['admin', 'member']), deleteTask);
+router.patch('/:id', requireRole(['owner', 'admin', 'member']), updateTask);
+router.delete('/:id', requireRole(['owner', 'admin', 'member']), deleteTask);
 router.get('/:id/activity', getTaskActivity);
 
 module.exports = router;

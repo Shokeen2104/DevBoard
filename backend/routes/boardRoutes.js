@@ -11,11 +11,11 @@ const { requireAuth, requireRole } = require('../middleware/authMiddleware');
 router.use(requireAuth);
 
 // If mounted at /api/workspaces/:id/boards
-router.post('/', requireRole(['admin', 'member']), createBoard);
+router.post('/', requireRole(['owner', 'admin']), createBoard);
 
 // If mounted at /api/boards
 router.get('/:id', getBoard);
-router.delete('/:id', requireRole(['admin']), deleteBoard);
+router.delete('/:id', requireRole(['owner', 'admin']), deleteBoard);
 
 // Nested routes
 router.use('/:id/lists', require('./listRoutes'));

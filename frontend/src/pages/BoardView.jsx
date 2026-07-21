@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import Board from '../components/Board';
 import useBoardStore from '../store/boardStore';
 import useAuthStore from '../store/authStore';
+import useWorkspaceStore from '../store/workspaceStore';
 import useSocket from '../hooks/useSocket';
 import { Loader2 } from 'lucide-react';
 
@@ -12,6 +13,7 @@ const BoardView = () => {
   const board = useBoardStore(state => state.board);
   const isLoading = useBoardStore(state => state.isLoading);
   const user = useAuthStore(state => state.user);
+  const workspaces = useWorkspaceStore(state => state.workspaces);
 
   const initials = user?.name ? user.name.substring(0, 2).toUpperCase() : 'U';
 
@@ -42,6 +44,17 @@ const BoardView = () => {
     );
   }
 
+  let canManageMembers = false;
+  const workspace = workspaces.find(w => w._id === board.workspaceId);
+  if (workspace) {
+    const currentMember = workspace.members.find(m => 
+      m.userId === user?.id || (m.userId._id && m.userId._id === user?.id)
+    );
+    if (currentMember && ['owner', 'admin'].includes(currentMember.role)) {
+      canManageMembers = true;
+    }
+  }
+
   return (
     <div className="board-container">
       <div className="board-header">
@@ -54,9 +67,11 @@ const BoardView = () => {
           <div className="avatar-group">
             <div className="avatar" style={{ background: '#094a8f', zIndex: 1 }}>{initials}</div>
           </div>
-          <button className="btn-outline">
-            <span style={{ fontSize: '1rem' }}>+</span> Invite
-          </button>
+          {canManageMembers && (
+            <button className="btn-outline">
+              <span style={{ fontSize: '1rem' }}>+</span> Invite
+            </button>
+          )}
         </div>
       </div>
       

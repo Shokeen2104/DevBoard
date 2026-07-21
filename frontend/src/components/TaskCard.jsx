@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { GripVertical, Trash2, Edit2 } from 'lucide-react';
 import api from '../api/axios';
 
 const TaskCard = ({ task }) => {
@@ -19,6 +19,28 @@ const TaskCard = ({ task }) => {
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 999 : 1,
+  };
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+
+  const handleUpdate = async (e) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (editTitle.trim() && editTitle.trim() !== task.title) {
+      try {
+        await api.patch(`/tasks/${task._id}`, { title: editTitle.trim() });
+      } catch (err) {
+        console.error("Failed to update task", err);
+        setEditTitle(task.title);
+      }
+    } else {
+      setEditTitle(task.title);
+    }
+    setIsEditing(false);
   };
 
   const handleDelete = async (e) => {
@@ -60,10 +82,48 @@ const TaskCard = ({ task }) => {
       )}
       
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
-        <div className="task-title">
-          {task.title}
+        <div className="task-title" style={{ flexGrow: 1 }}>
+          {isEditing ? (
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onBlur={handleUpdate}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleUpdate(e);
+                if (e.key === 'Escape') {
+                  setEditTitle(task.title);
+                  setIsEditing(false);
+                }
+              }}
+              autoFocus
+              onPointerDown={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                padding: '0.25rem',
+                borderRadius: '4px',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                boxSizing: 'border-box'
+              }}
+            />
+          ) : (
+            task.title
+          )}
         </div>
         <div style={{ color: 'var(--text-secondary)', opacity: 0.5, marginTop: '2px', display: 'flex', gap: '0.25rem' }}>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            style={{ 
+              background: 'none', border: 'none', color: 'inherit', 
+              cursor: 'pointer', display: 'flex', alignItems: 'center' 
+            }}
+            title="Edit task"
+          >
+            <Edit2 size={15} />
+          </button>
           <button 
             onClick={handleDelete}
             onPointerDown={(e) => e.stopPropagation()}

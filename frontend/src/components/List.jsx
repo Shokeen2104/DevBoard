@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TaskCard from './TaskCard';
 import api from '../api/axios';
 
 const List = ({ list }) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+
   const { setNodeRef } = useDroppable({
     id: list._id,
     data: { type: 'List', list }
@@ -12,9 +15,17 @@ const List = ({ list }) => {
 
   const taskIds = list.tasks.map(t => t._id);
 
-  const handleAddTask = async () => {
-    const title = window.prompt("Enter task title:");
-    if (!title) return;
+  const handleAddTask = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!newTaskTitle.trim()) {
+      setIsAdding(false);
+      return;
+    }
+    
+    const title = newTaskTitle.trim();
+    setNewTaskTitle('');
+    setIsAdding(false);
+
     try {
       const order = list.tasks.length > 0 
         ? list.tasks[list.tasks.length - 1].order + 1000 
@@ -50,9 +61,36 @@ const List = ({ list }) => {
         </SortableContext>
       </div>
       
-      <button className="add-task-btn" onClick={handleAddTask}>
-        <span>+</span> Add task
-      </button>
+      {isAdding ? (
+        <form onSubmit={handleAddTask} style={{ marginTop: '0.5rem' }}>
+          <input 
+            type="text" 
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            placeholder="Enter a title for this card..."
+            autoFocus
+            onBlur={handleAddTask}
+            style={{ 
+              width: '100%', 
+              padding: '0.5rem', 
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              marginBottom: '0.5rem',
+              boxSizing: 'border-box'
+            }}
+          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button type="submit" className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}>Add card</button>
+            <button type="button" onPointerDown={() => setIsAdding(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>✕</button>
+          </div>
+        </form>
+      ) : (
+        <button className="add-task-btn" onClick={() => setIsAdding(true)}>
+          <span>+</span> Add task
+        </button>
+      )}
     </div>
   );
 };
