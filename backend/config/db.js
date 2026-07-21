@@ -5,7 +5,7 @@ const connectDB = async () => {
     let uri = process.env.MONGO_URI;
     
     // For local dev without Docker, fallback to memory server
-    if (uri.includes('localhost') || uri.includes('mongo:27017')) {
+    if (process.env.NODE_ENV !== 'production' && (uri.includes('localhost') || uri.includes('127.0.0.1') || uri.includes('mongo:27017'))) {
       console.log('Using MongoDB Memory Server for local development...');
       const { MongoMemoryServer } = require('mongodb-memory-server');
       const mongoServer = await MongoMemoryServer.create();
